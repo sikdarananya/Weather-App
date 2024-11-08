@@ -130,12 +130,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - React team for the amazing framework
 - Vite for the build tooling
 
-## 📧 Contact
-
-Your Name - [@your_twitter](https://twitter.com/your_twitter)
-
-Project Link: [https://github.com/your-username/weather-app](https://github.com/your-username/weather-app)
-
 ---
 
 ## 💻 Development
