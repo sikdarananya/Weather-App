@@ -4,7 +4,6 @@
 
 A clean and minimalist weather application built with React that provides real-time weather information with a beautiful user interface. Features both light and dark modes for optimal viewing experience.
 
-![Weather App Screenshot](screenshot.png)
 
 ## 🌟 Features
 
