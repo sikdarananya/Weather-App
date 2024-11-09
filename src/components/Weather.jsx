@@ -97,7 +97,7 @@ const Weather = () => {
       ALL_ENV: import.meta.env
     });
     
-    search("Puri");
+    search("Kolkata");
   }, []);
   return (
     <div className='weather'>
