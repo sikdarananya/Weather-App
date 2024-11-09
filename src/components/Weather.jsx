@@ -9,8 +9,6 @@ import rain_icon from '../assets/rain.png'
 import snow_icon from '../assets/snow.png'
 import wind_icon from '../assets/wind.png'
 
-
-
 const Weather = () => {
 
   const inputRef = useRef()
@@ -33,50 +31,88 @@ const Weather = () => {
     "13n": snow_icon,
   }
 
-  const search = async (city)=>{
-    if(city === "")
-    {
+  const search = async (city) => {
+    if(city === "") {
       alert("Enter City Name");
       return;
     }
-    try{
-       const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${import.meta.env.VITE_APP_ID}`;
+    try {
+      // First, get coordinates from the geocoding API
+      const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`;
+      const geoResponse = await fetch(geocodingUrl);
+      const geoData = await geoResponse.json();
 
-       const response = await fetch(url);
-       const data = await response.json();
-
-       if(!response.ok){
-        alert(data.message);
+      if (!geoData.results || geoData.results.length === 0) {
+        alert("City not found!");
         return;
-       }
+      }
 
-       console.log(data);
-       const icon = allIcons[data.weather[0].icon] || clear_icon;
-       setWeatherData({
-        humidity: data.main.humidity,
-        windSpeed: data.wind.speed,
-        temperature: Math.floor(data.main.temp),
-        location: data.name,
-        icon: icon
-       })
+      const { latitude, longitude, name } = geoData.results[0];
+      
+      // Then, get weather data using the coordinates
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&timezone=auto`;
+      const weatherResponse = await fetch(weatherUrl);
+      const weatherData = await weatherResponse.json();
+
+      if (!weatherResponse.ok) {
+        alert("Error fetching weather data");
+        return;
+      }
+
+      // Update weather data state with the new format
+      setWeatherData({
+        humidity: weatherData.current.relative_humidity_2m,
+        windSpeed: weatherData.current.wind_speed_10m,
+        temperature: Math.floor(weatherData.current.temperature_2m),
+        location: name,
+        // Since Open-Meteo doesn't provide weather icons, we'll need to implement basic logic
+        icon: determineWeatherIcon(weatherData.current.temperature_2m)
+      });
 
     } catch (error) {
       setWeatherData(false);
-      console.error("Error in fetching weather data");
-
+      console.error("Error in fetching weather data:", error);
     }
-    
   }
 
-  useEffect(()=>{
-    search("Puri");
+  // Simple function to determine weather icon based on temperature
+  const determineWeatherIcon = (temp) => {
+    if (temp > 30) return clear_icon;
+    if (temp > 20) return cloud_icon;
+    if (temp > 10) return drizzle_icon;
+    if (temp > 0) return rain_icon;
+    return snow_icon;
+  }
 
-  },[])
+  // Add this new function to handle key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      search(inputRef.current.value);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Environment variables:", {
+      VITE_APP_ID: import.meta.env.VITE_APP_ID,
+      ALL_ENV: import.meta.env
+    });
+    
+    search("Puri");
+  }, []);
   return (
     <div className='weather'>
         <div className='search-bar'>
-            <input ref={inputRef} type='text' placeholder='Search'/>
-            <img src={search_icon} alt='' onClick={()=>search(inputRef.current.value)} />
+            <input 
+              ref={inputRef} 
+              type='text' 
+              placeholder='Search'
+              onKeyPress={handleKeyPress}  // Add this line
+            />
+            <img 
+              src={search_icon} 
+              alt='search' 
+              onClick={() => search(inputRef.current.value)} 
+            />
         </div>
         {weatherData?<>
           <img src={weatherData.icon} alt='' className='weather-icon'/>
